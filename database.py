@@ -10,10 +10,13 @@ conn = mysql.connector.connect(
     password="your_password",
     database="your_database"
 )
+
+# Create a cursor
 c = conn.cursor()
 
 # Function to create the todos table if it doesn't exist
 def create_table():
+    conn.ping(reconnect=True)  # Keep the connection alive
     c.execute("""
         CREATE TABLE IF NOT EXISTS todos (
             task VARCHAR(255) NOT NULL,
@@ -30,6 +33,7 @@ create_table()
 # Function to insert a new todo into the database
 def insert_todo(todo: Todo):
     try:
+        conn.ping(reconnect=True)  # Ensure the connection is alive
         c.execute('SELECT COUNT(*) FROM todos')
         count = c.fetchone()[0]
         todo.position = count if count else 0
@@ -52,6 +56,7 @@ def insert_todo(todo: Todo):
 # Function to retrieve all todos from the database
 def get_all_todos() -> List[Todo]:
     try:
+        conn.ping(reconnect=True)  # Keep the connection alive
         c.execute('SELECT * FROM todos ORDER BY position')
         results = c.fetchall()
         return [Todo(*result) for result in results]
@@ -62,6 +67,7 @@ def get_all_todos() -> List[Todo]:
 # Function to delete a todo based on its position
 def delete_todo(position: int):
     try:
+        conn.ping(reconnect=True)  # Keep the connection alive
         c.execute('SELECT COUNT(*) FROM todos')
         count = c.fetchone()[0]
 
@@ -76,6 +82,7 @@ def delete_todo(position: int):
 # Function to change the position of a todo in the list
 def change_position(old_position: int, new_position: int, commit=True):
     try:
+        conn.ping(reconnect=True)  # Keep the connection alive
         c.execute('UPDATE todos SET position = %s WHERE position = %s', (new_position, old_position))
         if commit:
             conn.commit()
@@ -85,6 +92,7 @@ def change_position(old_position: int, new_position: int, commit=True):
 # Function to update the task and/or category of a todo
 def update_todo(position: int, task: str = None, category: str = None):
     try:
+        conn.ping(reconnect=True)  # Keep the connection alive
         with conn:
             if task and category:
                 c.execute('UPDATE todos SET task = %s, category = %s WHERE position = %s', (task, category, position))
@@ -98,6 +106,7 @@ def update_todo(position: int, task: str = None, category: str = None):
 # Function to mark a todo as completed
 def complete_todo(position: int):
     try:
+        conn.ping(reconnect=True)  # Keep the connection alive
         with conn:
             c.execute('''
                 UPDATE todos 
@@ -106,6 +115,7 @@ def complete_todo(position: int):
             ''', (datetime.datetime.now().isoformat(), position))
     except mysql.connector.Error as e:
         print(f"An error occurred: {e}")
+
 
 
 # ------------------------------------------------------------------------------------------
